@@ -1,7 +1,7 @@
 name: Join team
 
 on:
-  workflow_dispatch:  # Manual trigger only, no inputs
+  workflow_dispatch:            # manual trigger, no inputs
 
 jobs:
   join-team:
@@ -18,8 +18,17 @@ jobs:
       - name: Install requests
         run: pip install --quiet requests
 
+      # Optional: print which account the token belongs to
+      - name: Show token owner (debug)
+        env:
+          LEAVE: ${{ secrets.LEAVE }}
+        run: |
+          echo "Token owner info:"
+          curl -s -H "Authorization: Bearer $LEAVE" https://lichess.org/api/account | jq '.id, .username'
+
       - name: Join the team
         env:
-          LEAVE: ${{ secrets.LEAVE }}   # Your Lichess token
-        run: |
-          python join_team.py
+          LEAVE:     ${{ secrets.LEAVE }}        # required token
+          TEAM_PASS: ${{ secrets.TEAM_PASS }}    # optional password
+          # TEAM_MSG can be set here if you want a custom message
+        run: python join_team.py
