@@ -1,12 +1,7 @@
 name: Join team
 
 on:
-  workflow_dispatch:              # run manually from the Actions tab
-    inputs:
-      message:
-        description: "Optional join message shown to team admins"
-        required: false
-        default: "Hi, please add me!"
+  workflow_dispatch:  # Manual trigger only, no inputs
 
 jobs:
   join-team:
@@ -25,6 +20,6 @@ jobs:
 
       - name: Join the team
         env:
-          TEAM: ${{ secrets.TEAM }}   # ← your token lives here (no quotes)
+          TEAM: ${{ secrets.TEAM }}   # Your Lichess token
         run: |
-          python join_team.py "${{ github.event.inputs.message }}"
+          python join_team.py
