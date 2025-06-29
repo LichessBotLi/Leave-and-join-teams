@@ -1,56 +1,69 @@
 #!/usr/bin/env python3
 """
-Join the Lichess team `bot-fide-rating`.
+Join the Lichess team `the-raptors` and print the full API response.
 
-Environment
------------
-LEAVE : str   – personal-access token with the `team:write` scope
-                (paste it into the GitHub secret named LEAVE).
+Environment variables
+---------------------
+LEAVE      : personal-access token (must include `team:write`)
+TEAM_PASS  : (optional) password if the team is password-protected
+TEAM_MSG   : (optional) join message, default "Joined via GitHub Action"
 """
 
 from __future__ import annotations
 import os
 import sys
-import requests
 import json
+import requests
+import textwrap
 
-TEAM_ID  = "bot-fide-rating"
-JOIN_URL = f"https://lichess.org/api/team/{TEAM_ID}/join"
-MESSAGE  = "Joined via GitHub Action"
+TEAM_ID   = "the-raptors"
+JOIN_URL  = f"https://lichess.org/api/team/{TEAM_ID}/join"
 
 def main() -> None:
-    token = os.environ.get("LEAVE")        # ← changed from TEAM ➜ LEAVE
+    token = os.getenv("LEAVE")
     if not token:
         sys.exit("❌  LEAVE environment variable not set.")
 
+    message  = os.getenv("TEAM_MSG", "Joined via GitHub Action")
+    password = os.getenv("TEAM_PASS")  # may be None
+
+    data = {"message": message}
+    if password:
+        data["password"] = password
+
     headers = {
         "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
+        "Accept": "application/json",   # ensure JSON rather than HTML
     }
-    data = {"message": MESSAGE}
 
+    print(f"► POST {JOIN_URL}")
     resp = requests.post(JOIN_URL, headers=headers, data=data, timeout=15)
+    print(f"◄ HTTP {resp.status_code}\n{'-'*60}")
 
+    # Show up to 500 chars of the body (pretty-printed JSON if possible)
+    try:
+        parsed = resp.json()
+        print(json.dumps(parsed, indent=2)[:500])
+    except (json.JSONDecodeError, ValueError):
+        print(resp.text[:500])
+
+    print('-' * 60)
+
+    # Exit codes for CI / GitHub Action
     if resp.status_code == 200:
-        try:
-            ok = resp.json().get("ok", False)
-            if ok:
-                print("✅  Successfully joined team ‘bot-fide-rating’.")
-            else:
-                print("ℹ️  Join request sent – awaiting team approval.")
-        except json.JSONDecodeError:
-            print("✅  Successfully joined (non-JSON response).")
+        print("✅  Join call succeeded (instant join or request pending).")
+        return
     elif resp.status_code == 401:
         sys.exit("❌  Invalid or expired token (401).")
     elif resp.status_code == 404:
-        sys.exit(
-            "❌  Team not found (404).\n"
-            "    • Check the slug (‘bot-fide-rating’)\n"
-            "    • Ensure your token has `team:write`\n"
-            "    • If you’re using a bot token and bots are blocked, use a human token."
-        )
+        sys.exit(textwrap.dedent("""\
+            ❌  Team not found (404).
+                • Check the slug (‘the-raptors’)
+                • Ensure your token has `team:write`
+                • If you’re already a member, /join returns 404
+                • If the team blocks your account type, API returns 404"""))
     else:
-        sys.exit(f"❌  HTTP {resp.status_code}: {resp.text}")
+        sys.exit(f"❌  HTTP {resp.status_code}: {resp.text[:200]}")
 
 if __name__ == "__main__":
     main()
