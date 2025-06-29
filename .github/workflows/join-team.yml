@@ -20,6 +20,6 @@ jobs:
 
       - name: Join the team
         env:
-          TEAM: ${{ secrets.TEAM }}   # Your Lichess token
+          LEAVE: ${{ secrets.LEAVE }}   # Your Lichess token
         run: |
           python join_team.py
