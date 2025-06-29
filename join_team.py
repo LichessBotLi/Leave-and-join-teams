@@ -4,8 +4,8 @@ Join the Lichess team `bot-fide-rating`.
 
 Environment
 -----------
-TEAM : str   – personal-access token with the `team:write` scope.
-              Must belong to the account you want added to the team.
+LEAVE : str   – personal-access token with the `team:write` scope
+                (paste it into the GitHub secret named LEAVE).
 """
 
 from __future__ import annotations
@@ -14,14 +14,14 @@ import sys
 import requests
 import json
 
-TEAM_ID   = "bot-fide-rating"
-JOIN_URL  = f"https://lichess.org/api/team/{TEAM_ID}/join"
-MESSAGE   = "Joined via GitHub Action"
+TEAM_ID  = "bot-fide-rating"
+JOIN_URL = f"https://lichess.org/api/team/{TEAM_ID}/join"
+MESSAGE  = "Joined via GitHub Action"
 
 def main() -> None:
-    token = os.environ.get("TEAM")
+    token = os.environ.get("LEAVE")        # ← changed from TEAM ➜ LEAVE
     if not token:
-        sys.exit("❌  TEAM environment variable not set.")
+        sys.exit("❌  LEAVE environment variable not set.")
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -32,7 +32,6 @@ def main() -> None:
     resp = requests.post(JOIN_URL, headers=headers, data=data, timeout=15)
 
     if resp.status_code == 200:
-        # 200 covers immediate join **and** pending-approval cases.
         try:
             ok = resp.json().get("ok", False)
             if ok:
