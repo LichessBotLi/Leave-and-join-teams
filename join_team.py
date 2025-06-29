@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Join the Lichess team `chess-enthusiasts` and print the full API response.
+Join the Lichess team `chess-enthusiasts-for-all` and print the full API response.
 
 Environment variables
 ---------------------
-LEAVE      : personal-access token (must include `team:write`)
+LEAVE      : personal-access token with the `team:write` scope
 TEAM_PASS  : (optional) password if the team is password-protected
 TEAM_MSG   : (optional) join message, default "Joined via GitHub Action"
 """
@@ -16,7 +16,7 @@ import json
 import requests
 import textwrap
 
-TEAM_ID  = "chess-enthusiasts"              # ← changed slug
+TEAM_ID  = "chess-enthusiasts-for-all"             # ✓ correct slug
 JOIN_URL = f"https://lichess.org/api/team/{TEAM_ID}/join"
 
 def main() -> None:
@@ -33,14 +33,14 @@ def main() -> None:
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
+        "Accept": "application/json",   # ask for JSON responses
     }
 
     print(f"► POST {JOIN_URL}")
     resp = requests.post(JOIN_URL, headers=headers, data=data, timeout=15)
     print(f"◄ HTTP {resp.status_code}\n{'-'*60}")
 
-    # Show up to 500 chars of the body (pretty-printed JSON if possible)
+    # Show up to 500 chars of body (pretty-printed JSON if possible)
     try:
         parsed = resp.json()
         print(json.dumps(parsed, indent=2)[:500])
@@ -54,9 +54,9 @@ def main() -> None:
     elif resp.status_code == 401:
         sys.exit("❌  Invalid or expired token (401).")
     elif resp.status_code == 404:
-        sys.exit(textwrap.dedent("""\
+        sys.exit(textwrap.dedent(f"""\
             ❌  Team not found (404).
-                • Check the slug (‘chess-enthusiasts’)
+                • Check the slug (‘{TEAM_ID}’)
                 • Ensure your token has `team:write`
                 • If you’re already a member, /join returns 404
                 • If the team blocks your account type, API returns 404"""))
