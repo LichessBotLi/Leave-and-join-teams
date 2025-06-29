@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Join the Lichess team `the-raptors` and print the full API response.
+Join the Lichess team `chess-enthusiasts` and print the full API response.
 
 Environment variables
 ---------------------
@@ -16,8 +16,8 @@ import json
 import requests
 import textwrap
 
-TEAM_ID   = "the-raptors"
-JOIN_URL  = f"https://lichess.org/api/team/{TEAM_ID}/join"
+TEAM_ID  = "chess-enthusiasts"              # ← changed slug
+JOIN_URL = f"https://lichess.org/api/team/{TEAM_ID}/join"
 
 def main() -> None:
     token = os.getenv("LEAVE")
@@ -33,7 +33,7 @@ def main() -> None:
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "Accept": "application/json",   # ensure JSON rather than HTML
+        "Accept": "application/json",
     }
 
     print(f"► POST {JOIN_URL}")
@@ -49,16 +49,14 @@ def main() -> None:
 
     print('-' * 60)
 
-    # Exit codes for CI / GitHub Action
     if resp.status_code == 200:
         print("✅  Join call succeeded (instant join or request pending).")
-        return
     elif resp.status_code == 401:
         sys.exit("❌  Invalid or expired token (401).")
     elif resp.status_code == 404:
         sys.exit(textwrap.dedent("""\
             ❌  Team not found (404).
-                • Check the slug (‘the-raptors’)
+                • Check the slug (‘chess-enthusiasts’)
                 • Ensure your token has `team:write`
                 • If you’re already a member, /join returns 404
                 • If the team blocks your account type, API returns 404"""))
