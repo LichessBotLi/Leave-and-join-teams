@@ -1,57 +1,57 @@
 #!/usr/bin/env python3
 """
-Join the Lichess team `the-raptors`.
+Join the Lichess team `bot-fide-rating`.
 
 Environment
 -----------
-TEAM : str
-    A personal-access token that has the `team:write` scope.
-    ⚠️  Must belong to a *human* account if the team disallows bots.
+TEAM : str   – personal-access token with the `team:write` scope.
+              Must belong to the account you want added to the team.
 """
 
 from __future__ import annotations
 import os
 import sys
-import json
 import requests
+import json
 
-TEAM_ID = "the-raptors"
-URL     = f"https://lichess.org/api/team/{TEAM_ID}/join"
-MESSAGE = "Joined via GitHub Action"
+TEAM_ID   = "bot-fide-rating"
+JOIN_URL  = f"https://lichess.org/api/team/{TEAM_ID}/join"
+MESSAGE   = "Joined via GitHub Action"
 
 def main() -> None:
     token = os.environ.get("TEAM")
     if not token:
-        sys.exit("TEAM env-var not set.")
+        sys.exit("❌  TEAM environment variable not set.")
 
     headers = {
         "Authorization": f"Bearer {token}",
-        # Forces JSON so we never get an HTML login page 1
         "Accept": "application/json",
     }
     data = {"message": MESSAGE}
 
-    r = requests.post(URL, headers=headers, data=data, timeout=15)
+    resp = requests.post(JOIN_URL, headers=headers, data=data, timeout=15)
 
-    if r.status_code == 200:
+    if resp.status_code == 200:
+        # 200 covers immediate join **and** pending-approval cases.
         try:
-            if r.json().get("ok"):
-                print("✅  Joined The Raptors successfully.")
+            ok = resp.json().get("ok", False)
+            if ok:
+                print("✅  Successfully joined team ‘bot-fide-rating’.")
             else:
-                print("ℹ️  Join request sent – waiting for leader approval.")
+                print("ℹ️  Join request sent – awaiting team approval.")
         except json.JSONDecodeError:
-            print("✅  Joined The Raptors successfully (non-JSON body).")
-    elif r.status_code == 401:
-        sys.exit("❌  Invalid or expired token.")
-    elif r.status_code == 404:
+            print("✅  Successfully joined (non-JSON response).")
+    elif resp.status_code == 401:
+        sys.exit("❌  Invalid or expired token (401).")
+    elif resp.status_code == 404:
         sys.exit(
-            "❌  Team not found.\n"
-            "    • Check the slug (‘the-raptors’)\n"
-            "    • Make sure your token has `team:write`\n"
-            "    • Use a human account token if the team blocks bots"
+            "❌  Team not found (404).\n"
+            "    • Check the slug (‘bot-fide-rating’)\n"
+            "    • Ensure your token has `team:write`\n"
+            "    • If you’re using a bot token and bots are blocked, use a human token."
         )
     else:
-        sys.exit(f"❌  HTTP {r.status_code}: {r.text}")
+        sys.exit(f"❌  HTTP {resp.status_code}: {resp.text}")
 
 if __name__ == "__main__":
     main()
